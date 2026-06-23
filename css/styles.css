@@ -1,0 +1,430 @@
+/* ===========================================================
+   QUINIELA MUNDIAL 2026 — estilos
+   Tema: estadio nocturno · césped + ámbar de trofeo
+   =========================================================== */
+
+:root{
+  --bg:        #0a0e1a;
+  --bg-2:      #0f1626;
+  --panel:     #141d31;
+  --panel-2:   #1a2540;
+  --line:      #25304d;
+  --text:      #eaf0fb;
+  --text-dim:  #9aa7c4;
+  --grass:     #16c060;   /* verde césped */
+  --grass-2:   #0fa850;
+  --gold:      #f5b53d;   /* ámbar trofeo */
+  --gold-2:    #e89a1c;
+  --danger:    #ef4d6a;
+  --blue:      #3d7bff;
+  --radius:    14px;
+  --shadow:    0 10px 30px rgba(0,0,0,.45);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(22,192,96,.10), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, rgba(245,181,61,.08), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+.hidden{display:none !important}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit}
+
+/* ---------- Botones base ---------- */
+.btn-primary{
+  background:linear-gradient(135deg,var(--grass),var(--grass-2));
+  color:#04210f;font-weight:800;letter-spacing:.3px;
+  padding:13px 22px;border-radius:11px;font-size:15px;
+  box-shadow:0 6px 18px rgba(22,192,96,.32);
+  transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(22,192,96,.45)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{filter:grayscale(.6) opacity(.55);cursor:not-allowed;transform:none}
+.btn-block{width:100%}
+.btn-ghost{
+  border:1px solid var(--line);padding:9px 16px;border-radius:10px;
+  color:var(--text-dim);font-weight:600;font-size:14px;transition:.15s;
+}
+.btn-ghost:hover{border-color:var(--grass);color:var(--text)}
+
+/* ===========================================================
+   LOGIN
+   =========================================================== */
+.auth-screen{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:24px;gap:20px;
+}
+.auth-card{
+  width:100%;max-width:420px;background:var(--panel);
+  border:1px solid var(--line);border-radius:20px;
+  padding:32px 28px;box-shadow:var(--shadow);
+  animation:popIn .5s cubic-bezier(.18,.89,.32,1.28);
+}
+@keyframes popIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.auth-brand{display:flex;align-items:center;gap:14px;margin-bottom:24px}
+.auth-brand .ball{font-size:42px;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.auth-brand h1{font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;letter-spacing:1px}
+.auth-brand h1 span{color:var(--gold)}
+.auth-sub{color:var(--text-dim);font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.auth-tabs{display:flex;background:var(--bg-2);border-radius:11px;padding:5px;margin-bottom:20px;gap:5px}
+.auth-tab{flex:1;padding:10px;border-radius:8px;font-weight:700;color:var(--text-dim);font-size:14px;transition:.18s}
+.auth-tab.active{background:var(--panel-2);color:var(--text);box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.auth-form{display:flex;flex-direction:column;gap:15px}
+.auth-form label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:600;color:var(--text-dim)}
+.auth-form input{
+  background:var(--bg-2);border:1px solid var(--line);color:var(--text);
+  padding:13px 14px;border-radius:10px;font-size:15px;transition:.15s;
+}
+.auth-form input:focus{outline:none;border-color:var(--grass);box-shadow:0 0 0 3px rgba(22,192,96,.15)}
+.auth-hint{font-size:12px;color:var(--text-dim);font-weight:500}
+.auth-error{color:var(--danger);font-size:13px;font-weight:600;min-height:18px}
+.auth-foot{color:var(--text-dim);font-size:13px;text-align:center;max-width:420px}
+
+/* Login solo-nombre + acceso admin */
+.admin-link{
+  display:block;margin:16px auto 0;color:var(--text-dim);font-size:13px;
+  font-weight:600;text-decoration:underline;text-underline-offset:3px;transition:.15s;
+}
+.admin-link:hover{color:var(--gold)}
+.admin-divider{
+  text-align:center;font-size:12px;font-weight:800;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--gold);margin-bottom:4px;
+}
+.auth-back{display:block;margin:4px auto 0;color:var(--text-dim);font-size:13px;font-weight:600}
+.auth-back:hover{color:var(--text)}
+
+/* Banderas (imágenes de flagcdn) */
+.flag-img{width:46px;height:auto;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.35);display:inline-block;vertical-align:middle}
+.flag-img.small{width:28px;border-radius:4px}
+.flag-tbd{
+  width:46px;height:34px;border-radius:5px;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--bg-2);border:1px dashed var(--line);font-size:18px;
+}
+
+/* ===========================================================
+   APP
+   =========================================================== */
+.app{min-height:100vh;display:flex;flex-direction:column}
+
+/* Header */
+.topbar{position:sticky;top:0;z-index:50;background:rgba(15,22,38,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar-inner{max-width:980px;margin:0 auto;padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-ball{font-size:28px}
+.brand-text{display:flex;flex-direction:column;line-height:1.2}
+.brand-text strong{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:.8px}
+.brand-text small{color:var(--gold);font-size:12px;font-weight:600}
+.prize-bar{
+  background:linear-gradient(90deg,rgba(245,181,61,.14),rgba(22,192,96,.10));
+  border-top:1px solid var(--line);text-align:center;
+  font-size:12.5px;padding:7px 14px;color:var(--text-dim);font-weight:500;
+}
+.prize-bar b{color:var(--gold)}
+
+/* Nav */
+.nav{
+  position:sticky;top:52px;z-index:45;
+  background:rgba(10,14,26,.94);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);
+  margin:0;padding:9px 14px;
+  display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;
+  justify-content:center;
+}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{
+  white-space:nowrap;padding:8px 15px;border-radius:10px;
+  background:var(--panel);border:1px solid var(--line);
+  font-weight:700;font-size:13px;color:var(--text-dim);transition:.18s;
+}
+.nav-btn span{margin-left:2px}
+.nav-btn:hover{color:var(--text);border-color:var(--grass)}
+.nav-btn.active{
+  background:linear-gradient(135deg,var(--gold),var(--gold-2));
+  color:#2a1a02;border-color:transparent;box-shadow:0 4px 14px rgba(245,181,61,.3);
+}
+
+/* Contenido */
+.content{max-width:980px;width:100%;margin:0 auto;padding:14px 14px 40px;flex:1}
+.view{display:none;animation:fadeUp .35s ease}
+.view.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* ---------- Filtros de grupo (fijos bajo la nav) ---------- */
+.filters{
+  position:sticky;top:102px;z-index:40;
+  background:rgba(10,14,26,.94);backdrop-filter:blur(12px);
+  display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;
+  padding:10px 0;margin:0 0 14px;border-bottom:1px solid var(--line);
+}
+.filters::-webkit-scrollbar{display:none}
+.filter-chip{
+  white-space:nowrap;flex:0 0 auto;
+  padding:7px 14px;border-radius:20px;background:var(--panel);
+  border:1px solid var(--line);font-size:13px;font-weight:700;color:var(--text-dim);transition:.15s;
+}
+.filter-chip:hover{border-color:var(--grass);color:var(--text)}
+.filter-chip.active{background:var(--blue);border-color:transparent;color:#fff}
+
+/* Banner del premio (ahora en el ranking) */
+.prize-card{
+  background:linear-gradient(90deg,rgba(245,181,61,.16),rgba(22,192,96,.10));
+  border:1px solid var(--line);border-radius:12px;padding:13px 16px;
+  text-align:center;font-size:14px;color:var(--text-dim);margin-bottom:12px;
+}
+.prize-card b{color:var(--gold)}
+
+/* ---------- Tarjeta de partido ---------- */
+.matches-list{display:flex;flex-direction:column;gap:14px}
+.match-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;transition:transform .2s ease,border-color .2s ease;
+  animation:cardIn .4s ease backwards;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.match-card:hover{border-color:#33415f;transform:translateY(-2px)}
+.match-card.es-ancla{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 8px 24px rgba(245,181,61,.18);scroll-margin-top:170px}
+.match-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 16px;background:var(--bg-2);font-size:12px;font-weight:600;color:var(--text-dim);
+  border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap;
+}
+.match-tag{background:var(--blue);color:#fff;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.4px}
+.match-tag.elim{background:var(--gold);color:#2a1a02}
+.match-when{flex:1;text-align:center;min-width:140px}
+.match-state{display:flex;align-items:center;gap:5px}
+.dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+.dot.open{background:var(--grass);box-shadow:0 0 8px var(--grass)}
+.dot.locked{background:var(--gold)}
+.dot.done{background:var(--text-dim)}
+.match-venue{font-size:11.5px;color:var(--text-dim);padding:6px 16px 0;text-align:center}
+.match-venue b{color:var(--text)}
+
+.match-body{padding:18px 16px}
+.match-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.team{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.team .flag{font-size:38px;line-height:1}
+.team .tname{font-size:14px;font-weight:700}
+.vs{font-family:'Bebas Neue',sans-serif;color:var(--text-dim);font-size:20px}
+
+/* Inputs de marcador */
+.score-inputs{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-top:16px}
+.score-in{
+  width:62px;height:62px;margin:0 auto;text-align:center;
+  font-family:'Bebas Neue',sans-serif;font-size:30px;
+  background:var(--bg-2);border:2px solid var(--line);border-radius:12px;color:var(--text);
+  transition:.15s;
+}
+.score-in:focus{outline:none;border-color:var(--grass);box-shadow:0 0 0 3px rgba(22,192,96,.18)}
+.score-in:disabled{opacity:.6;cursor:not-allowed}
+.score-sep{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text-dim)}
+
+/* Resultado final */
+.final-score{text-align:center;margin-top:10px}
+.final-score .big{font-family:'Bebas Neue',sans-serif;font-size:46px;letter-spacing:3px}
+.final-label{font-size:11px;font-weight:800;letter-spacing:1px;color:var(--gold);text-transform:uppercase}
+
+.match-foot{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+.my-pred{font-size:12.5px;color:var(--grass);font-weight:700;text-align:center}
+.pts-badge{display:inline-block;background:rgba(22,192,96,.15);color:var(--grass);padding:3px 10px;border-radius:20px;font-weight:800;font-size:12px;margin-left:6px}
+.pts-badge.zero{background:rgba(154,167,196,.12);color:var(--text-dim)}
+.match-actions{display:flex;gap:9px}
+.match-actions .btn-primary{flex:1;padding:11px;font-size:14px}
+.btn-see{
+  border:1px solid var(--line);border-radius:11px;padding:11px 14px;
+  font-weight:700;font-size:13px;color:var(--text-dim);transition:.15s;white-space:nowrap;
+}
+.btn-see:hover{border-color:var(--blue);color:var(--text)}
+.locked-note{
+  text-align:center;font-size:12.5px;color:var(--gold);font-weight:600;
+  background:rgba(245,181,61,.08);padding:9px;border-radius:10px;
+}
+/* Selector de desenlace en eliminatorias */
+.desenlace-box{margin-top:12px;text-align:center}
+.desenlace-label{display:block;font-size:12px;color:var(--text-dim);font-weight:600;margin-bottom:8px}
+.desenlace-opts{display:flex;gap:8px;justify-content:center}
+.des-opt{
+  flex:1;max-width:140px;padding:9px 12px;border-radius:10px;
+  background:var(--bg-2);border:1px solid var(--line);
+  font-size:13px;font-weight:700;color:var(--text-dim);transition:.15s;
+}
+.des-opt:hover{border-color:var(--gold);color:var(--text)}
+.des-opt.active{background:var(--gold);border-color:transparent;color:#2a1a02}
+.pending-note{
+  text-align:center;font-size:12.5px;color:var(--text-dim);font-weight:600;
+  background:var(--bg-2);padding:11px;border-radius:10px;
+}
+
+/* ---------- Quiniela General ---------- */
+.general-wrap{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:26px 22px;max-width:640px;margin:0 auto}
+.general-head h2{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;margin-bottom:10px}
+.general-head p{color:var(--text-dim);font-size:14px;margin-bottom:8px}
+.general-head b{color:var(--gold)}
+.general-status{font-weight:700;font-size:13px !important}
+.general-picks{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}
+.pick-box{display:flex;flex-direction:column;gap:8px}
+.pick-box label{font-size:13px;font-weight:700;color:var(--text-dim)}
+.pick-box select{
+  background:var(--bg-2);border:1px solid var(--line);color:var(--text);
+  padding:13px;border-radius:11px;font-size:15px;font-weight:600;
+}
+.pick-box select:focus{outline:none;border-color:var(--gold)}
+.inline-msg{margin-top:12px;font-weight:700;font-size:13px;min-height:18px}
+.inline-msg.ok{color:var(--grass)}
+.inline-msg.err{color:var(--danger)}
+
+/* ---------- Ranking ---------- */
+.rank-intro{
+  background:linear-gradient(90deg,rgba(245,181,61,.14),rgba(22,192,96,.08));
+  border:1px solid var(--line);border-radius:12px;padding:13px 16px;
+  font-size:13.5px;color:var(--text-dim);margin-bottom:16px;line-height:1.5;
+}
+.rank-intro b{color:var(--text)}
+.rank-tabs,.admin-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.rank-tab,.admin-tab{
+  padding:9px 16px;border-radius:10px;background:var(--panel);border:1px solid var(--line);
+  font-weight:700;font-size:13px;color:var(--text-dim);transition:.15s;
+}
+.rank-tab.active,.admin-tab.active{background:var(--grass);border-color:transparent;color:#04210f}
+.ranking-list{display:flex;flex-direction:column;gap:9px}
+.rank-row{
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px;
+  animation:cardIn .35s ease backwards;
+}
+.rank-pos{font-family:'Bebas Neue',sans-serif;font-size:24px;width:38px;text-align:center;color:var(--text-dim)}
+.rank-row.top1{border-color:var(--gold);background:linear-gradient(90deg,rgba(245,181,61,.12),var(--panel))}
+.rank-row.clickable{cursor:pointer}
+.rank-row.clickable:hover{border-color:var(--grass);transform:translateX(2px)}
+
+/* Resumen de jugador (modal) */
+.res-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.res-stat{background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:12px 8px;text-align:center}
+.res-num{display:block;font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--grass);line-height:1}
+.res-lbl{display:block;font-size:10.5px;color:var(--text-dim);font-weight:600;margin-top:4px}
+.res-list-title{font-size:13px;font-weight:700;color:var(--text-dim);margin-bottom:8px}
+.res-list{display:flex;flex-direction:column;gap:7px}
+.res-row{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--bg-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px}
+.res-match{display:flex;flex-direction:column;gap:2px;min-width:0}
+.res-teams{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-teams b{color:var(--gold)}
+.res-fase{font-size:11px;color:var(--text-dim)}
+.res-pts{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--grass);flex:0 0 auto}
+.rank-row.top1 .rank-pos{color:var(--gold)}
+.rank-row.top2 .rank-pos,.rank-row.top3 .rank-pos{color:var(--text)}
+.rank-name{font-weight:700;font-size:15px}
+.rank-meta{font-size:12px;color:var(--text-dim);font-weight:500}
+.rank-pts{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--grass)}
+.rank-pts small{font-size:12px;color:var(--text-dim);font-family:'Inter';font-weight:600}
+
+/* ---------- Reglas ---------- */
+.rules{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.rule-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.rule-card h3{font-family:'Bebas Neue',sans-serif;font-size:21px;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.rule-card p,.rule-card li{color:var(--text-dim);font-size:14px;margin-bottom:8px}
+.rule-card ul{padding-left:20px}
+.rule-card b{color:var(--text)}
+.pts-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:14px}
+.pts-table th,.pts-table td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+.pts-table th{color:var(--gold);font-weight:700}
+.pts-table td:last-child{text-align:right;font-weight:800;color:var(--grass);font-family:'Bebas Neue';font-size:18px}
+.ejemplos{margin-top:14px;background:var(--bg-2);border-radius:10px;padding:14px 16px}
+.ej-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px}
+.ejemplos ul{padding-left:18px;margin:0}
+.ejemplos li{font-size:13px;margin-bottom:6px;color:var(--text-dim)}
+.pts-win{color:var(--grass);font-weight:800}
+.pts-zero{color:var(--text-dim);font-weight:800}
+
+/* ---------- Admin ---------- */
+.admin-wrap{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:24px}
+.admin-wrap h2{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.5px;margin-bottom:16px}
+.admin-content{display:flex;flex-direction:column;gap:12px}
+.admin-match{
+  display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;
+  background:var(--bg-2);border:1px solid var(--line);border-radius:11px;padding:13px 15px;
+}
+.admin-match-info{font-size:14px}
+.admin-match-info b{color:var(--text)}
+.admin-match-info small{display:block;color:var(--text-dim);font-size:11.5px;margin-top:2px}
+.admin-score{display:flex;align-items:center;gap:6px}
+.admin-score input{width:48px;height:44px;text-align:center;font-size:18px;font-weight:700;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text)}
+.admin-score button{padding:10px 14px;border-radius:8px;background:var(--grass);color:#04210f;font-weight:800;font-size:13px}
+.admin-input{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:8px;font-size:13px;width:100%}
+.admin-filter{margin-bottom:14px}
+.admin-filter select{background:var(--bg-2);border:1px solid var(--line);color:var(--text);padding:10px;border-radius:9px;font-size:14px;font-weight:600}
+.user-row{display:flex;align-items:center;justify-content:space-between;background:var(--bg-2);border:1px solid var(--line);border-radius:10px;padding:12px 16px}
+.user-row b{font-weight:700}
+.badge-admin{background:var(--gold);color:#2a1a02;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:800;margin-left:8px}
+
+/* ---------- Footer ---------- */
+.footer{text-align:center;padding:24px;color:var(--text-dim);font-size:12.5px;border-top:1px solid var(--line)}
+
+/* ---------- Modal ---------- */
+.modal{position:fixed;inset:0;z-index:100;background:rgba(5,8,16,.78);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:18px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;max-width:440px;width:100%;max-height:80vh;overflow-y:auto;position:relative;animation:popIn .3s ease}
+.modal-close{position:absolute;top:14px;right:16px;font-size:20px;color:var(--text-dim);width:30px;height:30px;border-radius:8px}
+.modal-close:hover{background:var(--bg-2);color:var(--text)}
+.modal-card h3{font-family:'Bebas Neue';font-size:22px;margin-bottom:16px;letter-spacing:.5px}
+.others-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--line)}
+.others-row:last-child{border:none}
+.others-name{font-weight:600;font-size:14px}
+.others-score{font-family:'Bebas Neue';font-size:20px;color:var(--gold)}
+.others-hidden{font-size:12.5px;color:var(--text-dim);font-weight:600;font-style:italic}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);
+  background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+  padding:14px 22px;border-radius:12px;font-weight:600;font-size:14px;
+  box-shadow:var(--shadow);z-index:200;transition:transform .35s cubic-bezier(.18,.89,.32,1.28);
+  max-width:90vw;text-align:center;
+}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--grass)}
+.toast.err{border-color:var(--danger)}
+
+/* Spinner de carga */
+.loading{text-align:center;padding:50px 20px;color:var(--text-dim)}
+.spinner{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--grass);border-radius:50%;margin:0 auto 14px;animation:spin .8s linear infinite}
+.empty{text-align:center;padding:40px;color:var(--text-dim);font-size:14px}
+
+/* ===========================================================
+   RESPONSIVE
+   =========================================================== */
+@media (max-width:640px){
+  .nav-btn span{display:none}
+  .nav-btn{padding:8px 16px;font-size:18px}
+  .nav{padding:7px 10px;gap:6px;top:48px}
+  .filters{top:94px}
+  .topbar-inner{padding:8px 14px}
+  .brand-ball{font-size:22px}
+  .brand-text strong{font-size:16px}
+  .brand-text small{font-size:11px}
+  .general-picks{grid-template-columns:1fr}
+  .auth-brand h1{font-size:25px}
+  .team .flag{font-size:32px}
+  .team .tname{font-size:12.5px}
+  .score-in{width:54px;height:54px;font-size:26px}
+  .admin-match{grid-template-columns:1fr}
+  .match-when{font-size:11px}
+  .final-score .big{font-size:38px}
+  .content{padding:12px 12px 32px}
+}
+@media (min-width:641px) and (max-width:960px){
+  .matches-list{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+}
+
+/* Accesibilidad: respeta reduce-motion */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}

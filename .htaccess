@@ -1,0 +1,20 @@
+# Protege archivos de configuración y datos
+<FilesMatch "config\.php$">
+  Require all denied
+</FilesMatch>
+
+# Bloquea acceso directo a la carpeta de datos JSON
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^data/ - [F,L]
+</IfModule>
+
+# UTF-8 por defecto
+AddDefaultCharset UTF-8
+
+# Cache de estáticos
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+</IfModule>

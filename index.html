@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiniela Mundial 2026</title>
+<meta name="description" content="Quiniela del Mundial 2026 — pronostica marcadores, compite con tus amigos y sube en el ranking.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+<!-- ====== PANTALLA DE LOGIN ====== -->
+<div id="auth-screen" class="auth-screen">
+  <div class="auth-card">
+    <div class="auth-brand">
+      <div class="ball">⚽</div>
+      <div>
+        <h1>Quiniela <span>Mundial 2026</span></h1>
+        <p class="auth-sub">Pronostica · Compite · Gana</p>
+      </div>
+    </div>
+
+    <!-- Login de jugador: solo nombre -->
+    <form id="player-form" class="auth-form" autocomplete="off">
+      <label>Tu nombre de jugador
+        <input type="text" id="player-name" placeholder="ej. Memo" maxlength="40" required>
+      </label>
+      <p class="auth-hint">La primera vez creas tu quiniela. Después entra con el mismo nombre y retomas donde quedaste.</p>
+      <button type="submit" class="btn-primary btn-block" id="player-submit">Entrar a mi quiniela</button>
+      <p class="auth-error" id="auth-error"></p>
+    </form>
+
+    <button class="admin-link" id="show-admin">🔐 Soy el administrador</button>
+
+    <!-- Login de admin: usuario + contraseña (oculto por defecto) -->
+    <form id="admin-form" class="auth-form hidden" autocomplete="off">
+      <div class="admin-divider">Acceso administrador</div>
+      <label>Usuario
+        <input type="text" id="admin-user" placeholder="admin" maxlength="40">
+      </label>
+      <label>Contraseña
+        <input type="password" id="admin-pass" placeholder="••••••••">
+      </label>
+      <button type="submit" class="btn-primary btn-block">Entrar como admin</button>
+      <button type="button" class="auth-back" id="hide-admin">← Volver</button>
+      <p class="auth-error" id="admin-error"></p>
+    </form>
+  </div>
+  <p class="auth-foot">🎟 Premio: una entrada al cine + golosinas a elección del campeón 🎁</p>
+</div>
+
+<!-- ====== APP PRINCIPAL ====== -->
+<div id="app" class="app hidden">
+
+  <!-- Header -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-ball">⚽</span>
+        <div class="brand-text">
+          <strong>Quiniela Mundial 2026</strong>
+          <small id="welcome">Hola, jugador</small>
+        </div>
+      </div>
+      <button id="btn-logout" class="btn-ghost">Salir</button>
+    </div>
+  </header>
+
+  <!-- Navegación -->
+  <nav class="nav">
+    <button class="nav-btn active" data-view="partidos">⚽ <span>Partidos</span></button>
+    <button class="nav-btn" data-view="general">🌎 <span>Quiniela General</span></button>
+    <button class="nav-btn" data-view="ranking">🏆 <span>Ranking</span></button>
+    <button class="nav-btn" data-view="reglas">📋 <span>Reglas</span></button>
+    <button class="nav-btn admin-only hidden" data-view="admin">🔐 <span>Admin</span></button>
+  </nav>
+
+  <main class="content">
+
+    <!-- ===== VISTA PARTIDOS ===== -->
+    <section id="view-partidos" class="view active">
+      <div class="filters" id="group-filters"></div>
+      <div id="matches-list" class="matches-list"></div>
+    </section>
+
+    <!-- ===== VISTA QUINIELA GENERAL ===== -->
+    <section id="view-general" class="view">
+      <div class="general-wrap">
+        <div class="general-head">
+          <h2>🌎 Quiniela General — ¿Quién será campeón?</h2>
+          <p>Elige <b>dos países</b>. Si tu <b>opción 1</b> es el campeón ganas <b>15 pts</b>. Si lo aciertas en tu <b>opción 2</b>, ganas <b>8 pts</b>. Si otro lo puso como opción 1 y tú como opción 2, gana quien lo eligió primero.</p>
+          <p class="general-status" id="general-status"></p>
+        </div>
+        <div class="general-picks">
+          <div class="pick-box">
+            <label>🥇 Opción 1 (campeón más probable)</label>
+            <select id="pais1"></select>
+          </div>
+          <div class="pick-box">
+            <label>🥈 Opción 2 (tu segunda apuesta)</label>
+            <select id="pais2"></select>
+          </div>
+        </div>
+        <button class="btn-primary" id="save-general">Guardar mi campeón 🏆</button>
+        <p class="inline-msg" id="general-msg"></p>
+      </div>
+    </section>
+
+    <!-- ===== VISTA RANKING ===== -->
+    <section id="view-ranking" class="view">
+      <div class="prize-card">🎟 <b>Premio:</b> una entrada al cine + golosinas a elección del campeón 🎁</div>
+      <div class="rank-intro">🏆 <b>Un solo premio:</b> gana quien acumule más puntos sumando <b>todo</b> (grupos + eliminatorias + campeón). Las otras pestañas son solo para ver el detalle.</div>
+      <div class="rank-tabs">
+        <button class="rank-tab active" data-rank="todos">🏆 Ranking (premio)</button>
+        <button class="rank-tab" data-rank="grupos">Detalle grupos</button>
+        <button class="rank-tab" data-rank="eliminatorias">Detalle eliminatorias</button>
+        <button class="rank-tab" data-rank="general">Campeón</button>
+      </div>
+      <div id="ranking-list" class="ranking-list"></div>
+    </section>
+
+    <!-- ===== VISTA REGLAS ===== -->
+    <section id="view-reglas" class="view">
+      <div class="rules"></div>
+    </section>
+
+    <!-- ===== VISTA ADMIN ===== -->
+    <section id="view-admin" class="view">
+      <div class="admin-wrap">
+        <h2>🔐 Panel de administración</h2>
+        <div class="admin-tabs">
+          <button class="admin-tab active" data-admin="resultados">Subir resultados</button>
+          <button class="admin-tab" data-admin="eliminatorias">Definir cruces</button>
+          <button class="admin-tab" data-admin="campeon">Campeón</button>
+          <button class="admin-tab" data-admin="usuarios">Usuarios</button>
+        </div>
+        <div id="admin-content" class="admin-content"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Hecho para la banda ⚽ · Horarios en hora de Ciudad de México (CDMX)</p>
+  </footer>
+</div>
+
+<!-- Modal: ver pronósticos de otros -->
+<div id="modal" class="modal hidden">
+  <div class="modal-card">
+    <button class="modal-close" id="modal-close">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+CAMBIO: Resumen flotante del jugador en el Ranking
+====================================================
+
+Sube estos archivos al servidor:
+
+  api/resumen.php  → carpeta quiniela/api/   (ARCHIVO NUEVO)
+  js/api.js        → carpeta quiniela/js/
+  js/app.js        → carpeta quiniela/js/
+  css/styles.css   → carpeta quiniela/css/
+
+NO toca base de datos. NO necesitas reinstalar.
+
+Qué hace:
+- En el Ranking, toca a cualquier participante y se abre
+  una ventana flotante con su resumen:
+    * Puntos totales
+    * Número de aciertos
+    * Marcadores exactos
+    * Lista de partidos donde sumó puntos (con su pronóstico
+      vs el resultado real y cuántos puntos ganó)
+    * Si tiene puntos de campeón, también aparecen.
+
+IMPORTANTE: el archivo api/resumen.php es NUEVO, asegúrate
+de subirlo a la carpeta api/ (no solo reemplazar los otros).
+
+Recuerda refrescar con caché limpio (cerrar Safari y reabrir).

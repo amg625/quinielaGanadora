@@ -1,0 +1,8 @@
+# NO subir credenciales reales
+includes/config.php
+
+# Sistema
+.DS_Store
+Thumbs.db
+*.log
+node_modules/
