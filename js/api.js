@@ -39,8 +39,8 @@ const API = {
 
   /* ---- Partidos ---- */
   listMatches: () => API._req('matches.php?action=list'),
-  savePrediction: (partido_id, goles_local, goles_visita, desenlace = null) =>
-    API._req('matches.php?action=save_prediction', 'POST', { partido_id, goles_local, goles_visita, desenlace }),
+  savePrediction: (partido_id, goles_local, goles_visita, desenlace = null, clasifica = null) =>
+    API._req('matches.php?action=save_prediction', 'POST', { partido_id, goles_local, goles_visita, desenlace, clasifica }),
   othersPredictions: (partido_id) => API._req(`matches.php?action=others&partido_id=${partido_id}`),
 
   /* ---- Ranking ---- */
@@ -53,8 +53,8 @@ const API = {
   generalPaises: () => API._req('general.php?action=paises'),
 
   /* ---- Admin ---- */
-  adminSetResult: (partido_id, goles_local, goles_visita, desenlace = null) =>
-    API._req('admin.php?action=set_result', 'POST', { partido_id, goles_local, goles_visita, desenlace }),
+  adminSetResult: (partido_id, goles_local, goles_visita, desenlace = null, clasifica = null) =>
+    API._req('admin.php?action=set_result', 'POST', { partido_id, goles_local, goles_visita, desenlace, clasifica }),
   adminEditMatch: (data) => API._req('admin.php?action=edit_match', 'POST', data),
   adminSetElimTeams: (data) => API._req('admin.php?action=set_elim_teams', 'POST', data),
   adminSetChampion: (campeon) => API._req('admin.php?action=set_champion', 'POST', { campeon }),

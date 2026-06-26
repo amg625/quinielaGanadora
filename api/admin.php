@@ -26,7 +26,9 @@ function recalcular_partido($pdo, $pid) {
             $p['goles_local'] !== null ? (int)$p['goles_local'] : null,
             $p['goles_visita'] !== null ? (int)$p['goles_visita'] : null,
             $pr['desenlace'] ?? null,
-            $p['desenlace'] ?? null
+            $p['desenlace'] ?? null,
+            $pr['clasifica'] ?? null,
+            $p['clasifica'] ?? null
         );
         $upd->execute([$pts, $pr['id']]);
     }
@@ -40,29 +42,33 @@ switch ($action) {
         $gl = $d['goles_local'] ?? null;
         $gv = $d['goles_visita'] ?? null;
         $desenlace = $d['desenlace'] ?? null;
+        $clasifica = $d['clasifica'] ?? null;
 
         if (!is_numeric($gl) || !is_numeric($gv) || $gl < 0 || $gv < 0) {
             json_out(['ok' => false, 'error' => 'Marcador inválido.']);
         }
 
-        // Si es eliminatoria y empató, debe haber desenlace
-        $stmt = $pdo->prepare("SELECT etapa FROM partidos WHERE id = ?");
+        $stmt = $pdo->prepare("SELECT etapa, equipo_local, equipo_visita FROM partidos WHERE id = ?");
         $stmt->execute([$pid]);
         $row = $stmt->fetch();
+
         if ($row && $row['etapa'] === 'eliminatorias') {
-            if ((int)$gl === (int)$gv && !$desenlace) {
-                json_out(['ok' => false, 'error' => 'Empate en eliminatoria: indica si se definió por prórroga o penales.']);
-            }
             $validos = ['regular','prorroga','penales'];
-            if ($desenlace && !in_array($desenlace, $validos)) $desenlace = null;
+            if (!$desenlace || !in_array($desenlace, $validos)) {
+                json_out(['ok' => false, 'error' => 'Indica cómo terminó: 90 min, prórroga o penales.']);
+            }
+            if (!$clasifica || !in_array($clasifica, [$row['equipo_local'], $row['equipo_visita']])) {
+                json_out(['ok' => false, 'error' => 'Indica qué equipo clasificó.']);
+            }
         } else {
             $desenlace = null;
+            $clasifica = null;
         }
 
         $pdo->prepare("UPDATE partidos
-                       SET goles_local=?, goles_visita=?, desenlace=?, estado='finalizado'
+                       SET goles_local=?, goles_visita=?, desenlace=?, clasifica=?, estado='finalizado'
                        WHERE id = ?")
-            ->execute([(int)$gl, (int)$gv, $desenlace, $pid]);
+            ->execute([(int)$gl, (int)$gv, $desenlace, $clasifica, $pid]);
 
         recalcular_partido($pdo, $pid);
         json_out(['ok' => true, 'msg' => 'Resultado guardado y puntos recalculados ✅']);

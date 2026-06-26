@@ -16,7 +16,7 @@ switch ($action) {
 
         $mis = [];
         if ($u) {
-            $stmt = $pdo->prepare("SELECT partido_id, goles_local, goles_visita, desenlace, puntos
+            $stmt = $pdo->prepare("SELECT partido_id, goles_local, goles_visita, desenlace, clasifica, puntos
                                    FROM pronosticos WHERE usuario_id = ?");
             $stmt->execute([$u['id']]);
             foreach ($stmt->fetchAll() as $p) $mis[$p['partido_id']] = $p;
@@ -34,6 +34,7 @@ switch ($action) {
                 'goles_local' => $p['goles_local'] !== null ? (int)$p['goles_local'] : null,
                 'goles_visita' => $p['goles_visita'] !== null ? (int)$p['goles_visita'] : null,
                 'desenlace' => $p['desenlace'],
+                'clasifica' => $p['clasifica'] ?? null,
                 'estado' => $p['estado'],
                 'bloqueado' => partido_bloqueado($p['fecha_cdmx'], $p['estado']),
                 'mi_pred' => $mis[$pid] ?? null,
@@ -52,6 +53,7 @@ switch ($action) {
         $gl = $d['goles_local'] ?? null;
         $gv = $d['goles_visita'] ?? null;
         $desenlace = $d['desenlace'] ?? null; // solo eliminatorias
+        $clasifica = $d['clasifica'] ?? null; // solo eliminatorias
 
         if ($gl === null || $gv === null || !is_numeric($gl) || !is_numeric($gv) || $gl < 0 || $gv < 0) {
             json_out(['ok' => false, 'error' => 'Ingresa un marcador válido para ambos equipos.']);
@@ -63,29 +65,34 @@ switch ($action) {
         if (!$p) json_out(['ok' => false, 'error' => 'Partido no encontrado.']);
 
         if (partido_bloqueado($p['fecha_cdmx'], $p['estado'])) {
-            json_out(['ok' => false, 'error' => '⏱ Este partido ya está cerrado (faltan menos de 30 min o ya inició).']);
+            json_out(['ok' => false, 'error' => '⏱ Este partido ya está cerrado (falta menos de 1 hora o ya inició).']);
         }
         if ($p['etapa'] === 'eliminatorias' && $p['estado'] === 'pendiente') {
             json_out(['ok' => false, 'error' => 'Este partido aún no está disponible. Se abrirá cuando se definan los cruces.']);
         }
 
-        // En eliminatorias, si hay empate en el marcador, exigir desenlace
+        // En eliminatorias: exigir desenlace y quién clasifica
         if ($p['etapa'] === 'eliminatorias') {
-            if ((int)$gl === (int)$gv && !$desenlace) {
-                json_out(['ok' => false, 'error' => 'En eliminatorias no hay empates: elige cómo se define (prórroga o penales).']);
-            }
             $validos = ['regular','prorroga','penales'];
-            if ($desenlace && !in_array($desenlace, $validos)) $desenlace = null;
+            if (!$desenlace || !in_array($desenlace, $validos)) {
+                json_out(['ok' => false, 'error' => 'Elige cómo termina el partido: 90 min, prórroga o penales.']);
+            }
+            // clasifica debe ser uno de los dos equipos
+            if (!$clasifica || !in_array($clasifica, [$p['equipo_local'], $p['equipo_visita']])) {
+                json_out(['ok' => false, 'error' => 'Elige qué equipo clasifica. ✅']);
+            }
         } else {
             $desenlace = null;
+            $clasifica = null;
         }
 
-        $pdo->prepare("INSERT INTO pronosticos (usuario_id, partido_id, goles_local, goles_visita, desenlace)
-                       VALUES (?,?,?,?,?)
+        $pdo->prepare("INSERT INTO pronosticos (usuario_id, partido_id, goles_local, goles_visita, desenlace, clasifica)
+                       VALUES (?,?,?,?,?,?)
                        ON DUPLICATE KEY UPDATE goles_local=VALUES(goles_local),
                                                goles_visita=VALUES(goles_visita),
-                                               desenlace=VALUES(desenlace), guardado=NOW()")
-            ->execute([$u['id'], $pid, (int)$gl, (int)$gv, $desenlace]);
+                                               desenlace=VALUES(desenlace),
+                                               clasifica=VALUES(clasifica), guardado=NOW()")
+            ->execute([$u['id'], $pid, (int)$gl, (int)$gv, $desenlace, $clasifica]);
 
         json_out(['ok' => true]);
     }
@@ -118,7 +125,7 @@ switch ($action) {
         $ocultar = ($partido['etapa'] === 'eliminatorias' && !$ya_empezo && empty($u['is_admin']));
 
         $stmt = $pdo->prepare("
-            SELECT us.usuario, pr.goles_local, pr.goles_visita, pr.desenlace, pr.puntos
+            SELECT us.usuario, pr.goles_local, pr.goles_visita, pr.desenlace, pr.clasifica, pr.puntos
             FROM pronosticos pr JOIN usuarios us ON us.id = pr.usuario_id
             WHERE pr.partido_id = ? ORDER BY us.usuario");
         $stmt->execute([$pid]);

@@ -230,17 +230,28 @@ function matchCard(m, idx, esAncla = false) {
       ${pred ? `<div class="match-actions"><button class="btn-see" data-others="${m.id}">👁 Ver pronósticos de todos</button></div>` : ''}
     </div>`;
   } else {
-    // Abierto: inputs de marcador (+ desenlace si es eliminatoria)
+    // Abierto: inputs de marcador (+ quién clasifica y cómo termina si es eliminatoria)
     const lv = pred ? pred.goles_local : '';
     const vv = pred ? pred.goles_visita : '';
     const restante = UI.tiempoRestante(m.fecha_cdmx);
     const dsel = pred && pred.desenlace ? pred.desenlace : '';
-    const desenlaceUI = esElim ? `
-      <div class="desenlace-box" data-mid="${m.id}">
-        <span class="desenlace-label">Si hay empate, ¿cómo se define?</span>
+    const csel = pred && pred.clasifica ? pred.clasifica : '';
+    const elimUI = esElim ? `
+      <div class="elim-box">
+        <span class="elim-label">✅ ¿Quién clasifica?</span>
+        <div class="clasifica-opts">
+          <button type="button" class="clas-opt ${csel===m.local?'active':''}" data-clas="${UI.escape(m.local)}" data-mid="${m.id}">
+            ${UI.flag(m.local_flag,true)} ${UI.escape(m.local)} ${csel===m.local?'✓':''}</button>
+          <button type="button" class="clas-opt ${csel===m.visita?'active':''}" data-clas="${UI.escape(m.visita)}" data-mid="${m.id}">
+            ${UI.flag(m.visita_flag,true)} ${UI.escape(m.visita)} ${csel===m.visita?'✓':''}</button>
+        </div>
+      </div>
+      <div class="elim-box">
+        <span class="elim-label">⏱ ¿Cómo termina?</span>
         <div class="desenlace-opts">
-          <button type="button" class="des-opt ${dsel==='prorroga'?'active':''}" data-des="prorroga" data-mid="${m.id}">⏱ Prórroga</button>
-          <button type="button" class="des-opt ${dsel==='penales'?'active':''}" data-des="penales" data-mid="${m.id}">🎯 Penales</button>
+          <button type="button" class="des-opt ${dsel==='regular'?'active':''}" data-des="regular" data-mid="${m.id}">90 min</button>
+          <button type="button" class="des-opt ${dsel==='prorroga'?'active':''}" data-des="prorroga" data-mid="${m.id}">Prórroga</button>
+          <button type="button" class="des-opt ${dsel==='penales'?'active':''}" data-des="penales" data-mid="${m.id}">Penales</button>
         </div>
       </div>` : '';
     foot = `<div class="match-foot">
@@ -249,7 +260,7 @@ function matchCard(m, idx, esAncla = false) {
         <span class="score-sep">:</span>
         <input type="number" min="0" max="99" class="score-in" data-side="v" data-mid="${m.id}" value="${vv}" placeholder="-">
       </div>
-      ${desenlaceUI}
+      ${elimUI}
       ${restante ? `<div class="my-pred" style="color:var(--text-dim);font-weight:500">${restante}</div>` : ''}
       <div class="match-actions">
         <button class="btn-primary" data-save="${m.id}">${pred ? 'Actualizar' : 'Guardar'} marcador</button>
@@ -285,18 +296,31 @@ function matchCard(m, idx, esAncla = false) {
 }
 
 function bindMatchEvents() {
-  // Selección de desenlace (prórroga / penales)
+  // Selección de desenlace (90 min / prórroga / penales)
   const desenSel = {}; // mid -> desenlace
   document.querySelectorAll('.des-opt').forEach(btn =>
     btn.addEventListener('click', () => {
       const mid = btn.dataset.mid;
-      const grupo = document.querySelectorAll(`.des-opt[data-mid="${mid}"]`);
-      grupo.forEach(b => b.classList.remove('active'));
+      document.querySelectorAll(`.des-opt[data-mid="${mid}"]`).forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       desenSel[mid] = btn.dataset.des;
     }));
-  // Pre-cargar selección existente
   document.querySelectorAll('.des-opt.active').forEach(b => { desenSel[b.dataset.mid] = b.dataset.des; });
+
+  // Selección de quién clasifica
+  const clasSel = {}; // mid -> equipo
+  document.querySelectorAll('.clas-opt').forEach(btn =>
+    btn.addEventListener('click', () => {
+      const mid = btn.dataset.mid;
+      document.querySelectorAll(`.clas-opt[data-mid="${mid}"]`).forEach(b => {
+        b.classList.remove('active');
+        b.innerHTML = b.innerHTML.replace(' ✓', '');
+      });
+      btn.classList.add('active');
+      if (!btn.innerHTML.includes('✓')) btn.innerHTML += ' ✓';
+      clasSel[mid] = btn.dataset.clas;
+    }));
+  document.querySelectorAll('.clas-opt.active').forEach(b => { clasSel[b.dataset.mid] = b.dataset.clas; });
 
   // Guardar pronóstico
   document.querySelectorAll('[data-save]').forEach(btn =>
@@ -308,19 +332,20 @@ function bindMatchEvents() {
 
       const m = State.matches.find(x => x.id == mid);
       let desenlace = desenSel[mid] || null;
-      // En eliminatorias con empate, exigir desenlace
-      if (m && m.etapa === 'eliminatorias' && Number(l) === Number(v) && !desenlace) {
-        UI.toast('Empate en eliminatoria: elige prórroga o penales ⏱', 'err');
-        return;
+      let clasifica = clasSel[mid] || null;
+      // En eliminatorias: exigir quién clasifica y cómo termina
+      if (m && m.etapa === 'eliminatorias') {
+        if (!clasifica) { UI.toast('Elige qué equipo clasifica ✅', 'err'); return; }
+        if (!desenlace) { UI.toast('Elige cómo termina: 90 min, prórroga o penales ⏱', 'err'); return; }
       }
       btn.disabled = true;
-      const scrollY = window.scrollY; // recordar posición
-      State.autoScroll = false; // no saltar al ancla tras guardar
+      const scrollY = window.scrollY;
+      State.autoScroll = false;
       try {
-        await API.savePrediction(Number(mid), Number(l), Number(v), desenlace);
-        UI.toast('¡Marcador guardado! 🎯', 'ok');
+        await API.savePrediction(Number(mid), Number(l), Number(v), desenlace, clasifica);
+        UI.toast('¡Pronóstico guardado! 🎯', 'ok');
         await loadMatches();
-        window.scrollTo({ top: scrollY }); // volver a donde estaba
+        window.scrollTo({ top: scrollY });
       } catch (err) {
         UI.toast(err.message, 'err');
         btn.disabled = false;
@@ -350,10 +375,11 @@ async function verOtros(mid) {
     } else {
       rows = pronosticos.map(p => {
         const des = p.desenlace && p.desenlace !== 'regular' ? ` <small style="color:var(--text-dim)">(${UI.desenlaceLabel(p.desenlace)})</small>` : '';
+        const clas = p.clasifica ? `<br><small style="color:var(--grass)">✅ pasa: ${UI.escape(p.clasifica)}</small>` : '';
         return `
         <div class="others-row">
           <span class="others-name">${p.usuario === State.user.usuario ? '⭐ ' : ''}${UI.escape(p.usuario)}</span>
-          <span class="others-score">${p.goles_local} - ${p.goles_visita}${des}
+          <span class="others-score">${p.goles_local} - ${p.goles_visita}${des}${clas}
             ${p.puntos > 0 ? `<span class="pts-badge">+${p.puntos}</span>` : ''}</span>
         </div>`;
       }).join('');
@@ -539,20 +565,20 @@ function renderReglas() {
 
     <div class="rule-card">
       <h3>🏆 Eliminatorias — puntos</h3>
-      <p>Desde dieciseisavos no hay empates: si los 90 minutos terminan igualados, el partido se define en <b>prórroga</b> o <b>penales</b>. Pronosticas el <b>marcador de los 90 minutos</b> y <b>cómo termina</b>. Cada acierto vale 3 puntos (máximo 9):</p>
+      <p>Desde dieciseisavos respondes <b>tres cosas</b> por partido. Cada acierto vale 3 puntos (máximo 9):</p>
       <table class="pts-table">
-        <tr><th>Acierto</th><th></th><th>Puntos</th></tr>
-        <tr><td>Aciertas <b>quién gana</b> a los 90' (o empate)</td><td></td><td>3</td></tr>
-        <tr><td>Aciertas el <b>marcador exacto</b> de los 90'</td><td></td><td>3</td></tr>
-        <tr><td>Aciertas <b>cómo termina</b> (90 min / prórroga / penales)</td><td></td><td>3</td></tr>
+        <tr><th>Pregunta</th><th></th><th>Puntos</th></tr>
+        <tr><td>1️⃣ <b>Marcador a los 90'</b> (aquí sí puede haber empate)</td><td></td><td>3</td></tr>
+        <tr><td>2️⃣ <b>Quién clasifica</b> (qué equipo avanza, sin empate)</td><td></td><td>3</td></tr>
+        <tr><td>3️⃣ <b>Cómo termina</b> (90 min / prórroga / penales)</td><td></td><td>3</td></tr>
       </table>
       <div class="ejemplos">
-        <p class="ej-title">📌 Ejemplos (resultado real: <b>Brasil 1–1 Francia a los 90', gana Brasil en penales</b>)</p>
+        <p class="ej-title">📌 Ejemplo (real: <b>Brasil 1–1 Francia a los 90', clasifica Brasil por penales</b>)</p>
         <ul>
-          <li>Pusiste <b>1–1</b> + <b>penales</b> → quién gana (3) + exacto (3) + cómo termina (3) = <span class="pts-win">9 pts</span> 🔥</li>
-          <li>Pusiste <b>1–1</b> + <b>prórroga</b> → quién gana (3) + exacto (3) = <span class="pts-win">6 pts</span></li>
-          <li>Pusiste <b>2–2</b> + <b>penales</b> → quién gana, empate a 90' (3) + cómo termina (3) = <span class="pts-win">6 pts</span></li>
-          <li>Pusiste <b>0–2</b> Francia → fallaste todo = <span class="pts-zero">0 pts</span></li>
+          <li>Pusiste <b>1–1</b>, clasifica <b>Brasil</b>, <b>penales</b> → 3+3+3 = <span class="pts-win">9 pts</span> 🔥</li>
+          <li>Pusiste <b>1–1</b>, clasifica <b>Brasil</b>, <b>prórroga</b> → 3+3 = <span class="pts-win">6 pts</span></li>
+          <li>Pusiste <b>2–0</b> Brasil, clasifica <b>Brasil</b>, <b>90 min</b> → solo quién clasifica = <span class="pts-win">3 pts</span></li>
+          <li>Pusiste <b>0–2</b>, clasifica <b>Francia</b> → fallaste todo = <span class="pts-zero">0 pts</span></li>
         </ul>
       </div>
       <p style="margin-top:10px">🔒 <b>Importante:</b> en eliminatorias <b>no puedes ver el pronóstico de los demás</b> hasta que el partido empiece. Antes solo verás "ya puso su pronóstico" — así nadie se copia.</p>
@@ -649,6 +675,11 @@ function adminResultados(cont) {
     const rows = items.map(m => {
       const esElim = m.etapa === 'eliminatorias';
       const desUI = esElim ? `
+        <select class="admin-input" id="r-c-${m.id}" style="width:auto;margin-right:6px">
+          <option value="">¿Clasifica?</option>
+          <option value="${UI.escape(m.local)}" ${m.clasifica===m.local?'selected':''}>${UI.escape(m.local)}</option>
+          <option value="${UI.escape(m.visita)}" ${m.clasifica===m.visita?'selected':''}>${UI.escape(m.visita)}</option>
+        </select>
         <select class="admin-input" id="r-d-${m.id}" style="width:auto;margin-right:6px">
           <option value="regular" ${m.desenlace==='regular'?'selected':''}>90 min</option>
           <option value="prorroga" ${m.desenlace==='prorroga'?'selected':''}>Prórroga</option>
@@ -676,16 +707,19 @@ function adminResultados(cont) {
         const l = document.getElementById(`r-l-${id}`).value;
         const v = document.getElementById(`r-v-${id}`).value;
         const dEl = document.getElementById(`r-d-${id}`);
+        const cEl = document.getElementById(`r-c-${id}`);
         const des = dEl ? dEl.value : null;
+        const clas = cEl ? cEl.value : null;
         if (l === '' || v === '') { UI.toast('Marcador incompleto', 'err'); return; }
+        if (cEl && !clas) { UI.toast('Indica qué equipo clasificó', 'err'); return; }
         b.disabled = true;
-        const scrollY = window.scrollY; // recordar posición
+        const scrollY = window.scrollY;
         try {
-          const { msg } = await API.adminSetResult(Number(id), Number(l), Number(v), des);
+          const { msg } = await API.adminSetResult(Number(id), Number(l), Number(v), des, clas);
           UI.toast(msg, 'ok');
           const { partidos } = await API.listMatches(); State.matches = partidos;
           render(document.getElementById('admin-mfilter')?.value || 'todos');
-          window.scrollTo({ top: scrollY }); // volver a donde estaba
+          window.scrollTo({ top: scrollY });
         } catch (err) { UI.toast(err.message, 'err'); b.disabled = false; }
       }));
   };

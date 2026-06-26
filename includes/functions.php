@@ -43,26 +43,31 @@ function require_admin() {
      - Acertar resultado (1/X/2) ............ 3 pts
      - Acertar marcador exacto (incluye lo anterior) ... 5 pts (3+2)
    ELIMINATORIAS (esquema 3+3+3, máx 9):
-     - Acertar el resultado de los 90' (gana/empata/pierde) ... 3 pts
-     - Acertar el marcador exacto de los 90' ................... 3 pts
-     - Acertar cómo termina (90 min / prórroga / penales) ...... 3 pts
+     - Acertar el marcador exacto de los 90' ............ 3 pts
+     - Acertar quién clasifica (qué equipo avanza) ...... 3 pts
+     - Acertar cómo termina (90 min / prórroga / penales) 3 pts
 */
 function calcular_puntos($etapa, $pred_l, $pred_v, $real_l, $real_v,
-                         $pred_desenlace = null, $real_desenlace = null) {
+                         $pred_desenlace = null, $real_desenlace = null,
+                         $pred_clasifica = null, $real_clasifica = null) {
     if ($real_l === null || $real_v === null) return 0;
 
-    $signo = fn($a, $b) => $a > $b ? 1 : ($a < $b ? -1 : 0);
-    $acierta_resultado = $signo($pred_l, $pred_v) === $signo($real_l, $real_v);
-    $acierta_exacto    = ((int)$pred_l === (int)$real_l && (int)$pred_v === (int)$real_v);
+    $acierta_exacto = ((int)$pred_l === (int)$real_l && (int)$pred_v === (int)$real_v);
 
     $pts = 0;
     if ($etapa === 'eliminatorias') {
-        if ($acierta_resultado) $pts += 3;   // acierta quién gana/empata a los 90'
-        if ($acierta_exacto)    $pts += 3;   // marcador exacto de los 90'
+        if ($acierta_exacto) $pts += 3;   // marcador exacto de los 90'
+        // Quién clasifica (equipo que avanza)
+        if ($pred_clasifica && $real_clasifica && $pred_clasifica === $real_clasifica) {
+            $pts += 3;
+        }
+        // Cómo termina
         if ($pred_desenlace && $real_desenlace && $pred_desenlace === $real_desenlace) {
-            $pts += 3;                        // cómo termina: 90min / prórroga / penales
+            $pts += 3;
         }
     } else {
+        $signo = fn($a, $b) => $a > $b ? 1 : ($a < $b ? -1 : 0);
+        $acierta_resultado = $signo($pred_l, $pred_v) === $signo($real_l, $real_v);
         if ($acierta_resultado) $pts += 3;
         if ($acierta_exacto)    $pts += 2;   // 3+2 = 5
     }

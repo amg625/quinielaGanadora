@@ -249,11 +249,22 @@ input,select{font-family:inherit}
   background:rgba(245,181,61,.08);padding:9px;border-radius:10px;
 }
 /* Selector de desenlace en eliminatorias */
+.elim-box{margin-top:12px;text-align:center}
+.elim-label{display:block;font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:8px}
+.clasifica-opts{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.clas-opt{
+  flex:1;min-width:120px;padding:10px 12px;border-radius:10px;
+  background:var(--bg-2);border:1px solid var(--line);
+  font-size:13px;font-weight:700;color:var(--text);transition:.15s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.clas-opt:hover{border-color:var(--grass)}
+.clas-opt.active{background:rgba(22,192,96,.18);border-color:var(--grass);color:var(--grass)}
 .desenlace-box{margin-top:12px;text-align:center}
 .desenlace-label{display:block;font-size:12px;color:var(--text-dim);font-weight:600;margin-bottom:8px}
 .desenlace-opts{display:flex;gap:8px;justify-content:center}
 .des-opt{
-  flex:1;max-width:140px;padding:9px 12px;border-radius:10px;
+  flex:1;max-width:120px;padding:9px 12px;border-radius:10px;
   background:var(--bg-2);border:1px solid var(--line);
   font-size:13px;font-weight:700;color:var(--text-dim);transition:.15s;
 }
