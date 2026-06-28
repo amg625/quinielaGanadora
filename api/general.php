@@ -10,14 +10,12 @@ $pdo = db();
 $action = $_GET['action'] ?? '';
 
 /* ¿Ya cerró la quiniela general?
-   Cierra 1 día antes de que inicie el primer partido de eliminatorias. */
+   Cierra en una fecha fija. Para cambiarla, edita FECHA_CIERRE abajo. */
 function general_cerrada($pdo) {
-    $p = $pdo->query("SELECT MIN(fecha_cdmx) AS inicio FROM partidos
-                      WHERE etapa='eliminatorias'")->fetch();
-    if (!$p || !$p['inicio']) return false;
-    // Cierre = 1 día (24h) antes del primer partido de eliminatorias
-    $cierre = strtotime($p['inicio']) - 24 * 60 * 60;
-    return time() >= $cierre;
+    // Fecha y hora límite para elegir campeones (hora CDMX).
+    // Formato: 'AAAA-MM-DD HH:MM:SS'. Aquí: lunes 29 junio 2026 a las 23:59.
+    $FECHA_CIERRE = '2026-06-29 23:59:59';
+    return time() >= strtotime($FECHA_CIERRE);
 }
 
 switch ($action) {

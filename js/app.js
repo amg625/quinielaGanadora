@@ -148,8 +148,27 @@ async function loadMatches() {
 function renderGroupFilters() {
   const cont = document.getElementById('group-filters');
   const grupos = [...new Set(State.matches.filter(m => m.grupo).map(m => m.grupo))].sort();
-  const chips = [['todos', 'Todos'], ['eliminatorias', '🏆 Eliminatorias']];
-  grupos.forEach(g => chips.splice(chips.length - 1, 0, [g, `Grupo ${g}`]));
+
+  // Orden oficial de las rondas de eliminatorias
+  const ordenRondas = ['Dieciseisavos de final', 'Octavos de final', 'Cuartos de final', 'Semifinal', 'Tercer lugar', 'Final'];
+  const etiquetas = {
+    'Dieciseisavos de final': '🏆 16vos',
+    'Octavos de final': '🏆 8vos',
+    'Cuartos de final': '🏆 4tos',
+    'Semifinal': '🏆 Semis',
+    'Tercer lugar': '🥉 3er lugar',
+    'Final': '🏆 Final',
+  };
+  // Una ronda aparece solo si tiene al menos un partido YA definido (no 'pendiente')
+  const rondasActivas = ordenRondas.filter(r =>
+    State.matches.some(m => m.etapa === 'eliminatorias' && m.ronda === r && m.estado !== 'pendiente'));
+
+  // Construir chips: Todos · [rondas de elim, la más avanzada primero] · Grupos A-L
+  // .reverse() pone la fase más nueva (ej. 8vos) a la izquierda de la anterior (16vos).
+  const chips = [['todos', 'Todos']];
+  rondasActivas.slice().reverse().forEach(r => chips.push([`r:${r}`, etiquetas[r] || r]));
+  grupos.forEach(g => chips.push([`g:${g}`, `Grupo ${g}`]));
+
   cont.innerHTML = chips.map(([val, label]) =>
     `<button class="filter-chip ${State.groupFilter === val ? 'active' : ''}" data-g="${val}">${label}</button>`
   ).join('');
@@ -164,8 +183,18 @@ function renderGroupFilters() {
 function renderMatches() {
   const list = document.getElementById('matches-list');
   let items = State.matches;
-  if (State.groupFilter === 'eliminatorias') items = items.filter(m => m.etapa === 'eliminatorias');
-  else if (State.groupFilter !== 'todos') items = items.filter(m => m.grupo === State.groupFilter);
+  const f = State.groupFilter;
+  if (f === 'todos') {
+    // todos
+  } else if (f.startsWith('g:')) {
+    items = items.filter(m => m.grupo === f.slice(2));
+  } else if (f.startsWith('r:')) {
+    items = items.filter(m => m.etapa === 'eliminatorias' && m.ronda === f.slice(2));
+  } else if (f === 'eliminatorias') {
+    items = items.filter(m => m.etapa === 'eliminatorias');
+  } else {
+    items = items.filter(m => m.grupo === f); // compat con valores viejos
+  }
 
   if (!items.length) { list.innerHTML = `<div class="empty">No hay partidos en este filtro.</div>`; return; }
 
@@ -283,7 +312,7 @@ function matchCard(m, idx, esAncla = false) {
       <span class="match-when">${UI.fmtFecha(m.fecha_cdmx)}</span>
       <span class="match-state"><span class="dot ${dot}"></span>${estadoTxt}</span>
     </div>
-    <div class="match-venue">📍 <b>${UI.escape(m.estadio)}</b> · ${UI.escape(m.ciudad)}, ${UI.escape(m.pais)}</div>
+    ${esElim ? '' : `<div class="match-venue">📍 <b>${UI.escape(m.estadio)}</b> · ${UI.escape(m.ciudad)}, ${UI.escape(m.pais)}</div>`}
     <div class="match-body">
       <div class="match-teams">
         <div class="team"><span class="flag">${UI.flag(m.local_flag)}</span><span class="tname">${UI.escape(m.local)}</span></div>
