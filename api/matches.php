@@ -36,7 +36,8 @@ switch ($action) {
                 'desenlace' => $p['desenlace'],
                 'clasifica' => $p['clasifica'] ?? null,
                 'estado' => $p['estado'],
-                'bloqueado' => partido_bloqueado($p['fecha_cdmx'], $p['estado']),
+                'bloqueado' => partido_bloqueado($p['fecha_cdmx'], $p['estado'], $p['ronda']),
+                'fase_final' => es_fase_final($p['ronda']),
                 'mi_pred' => $mis[$pid] ?? null,
             ];
         }
@@ -64,11 +65,21 @@ switch ($action) {
         $p = $stmt->fetch();
         if (!$p) json_out(['ok' => false, 'error' => 'Partido no encontrado.']);
 
-        if (partido_bloqueado($p['fecha_cdmx'], $p['estado'])) {
-            json_out(['ok' => false, 'error' => '⏱ Este partido ya está cerrado (falta menos de 1 hora o ya inició).']);
+        $horas_txt = es_fase_final($p['ronda']) ? '2 horas' : '1 hora';
+        if (partido_bloqueado($p['fecha_cdmx'], $p['estado'], $p['ronda'])) {
+            json_out(['ok' => false, 'error' => "⏱ Este partido ya está cerrado (falta menos de {$horas_txt} o ya inició)."]);
         }
         if ($p['etapa'] === 'eliminatorias' && $p['estado'] === 'pendiente') {
             json_out(['ok' => false, 'error' => 'Este partido aún no está disponible. Se abrirá cuando se definan los cruces.']);
+        }
+
+        // En CUARTOS EN ADELANTE: el pronóstico es DEFINITIVO. Si ya existe, no se modifica.
+        if (es_fase_final($p['ronda'])) {
+            $ya = $pdo->prepare("SELECT id FROM pronosticos WHERE usuario_id = ? AND partido_id = ?");
+            $ya->execute([$u['id'], $pid]);
+            if ($ya->fetch()) {
+                json_out(['ok' => false, 'error' => '🔒 En esta fase el pronóstico es definitivo. Ya guardaste el tuyo y no se puede modificar.']);
+            }
         }
 
         // En eliminatorias: exigir desenlace y quién clasifica
@@ -102,8 +113,8 @@ switch ($action) {
         $u = current_user();
         $pid = (int)($_GET['partido_id'] ?? 0);
 
-        // Datos del partido (para saber etapa y si ya empezó)
-        $pstmt = $pdo->prepare("SELECT etapa, fecha_cdmx, estado FROM partidos WHERE id = ?");
+        // Datos del partido (para saber etapa, ronda y si ya empezó)
+        $pstmt = $pdo->prepare("SELECT etapa, ronda, fecha_cdmx, estado FROM partidos WHERE id = ?");
         $pstmt->execute([$pid]);
         $partido = $pstmt->fetch();
         if (!$partido) json_out(['ok' => false, 'error' => 'Partido no encontrado.']);
@@ -121,8 +132,12 @@ switch ($action) {
         $ya_empezo = (time() >= strtotime($partido['fecha_cdmx']))
                      || in_array($partido['estado'], ['finalizado', 'en_juego']);
 
-        // En ELIMINATORIAS: si NO ha empezado, ocultar los marcadores (solo "ya pronosticó")
-        $ocultar = ($partido['etapa'] === 'eliminatorias' && !$ya_empezo && empty($u['is_admin']));
+        // Reglas de revelado:
+        // - CUARTOS EN ADELANTE: como el pronóstico es definitivo, se revela apenas guardas el tuyo
+        //   (el jugador ya pasó el chequeo de arriba, así que aquí no se oculta).
+        // - 16vos y 8vos: se ocultan hasta que el partido empieza.
+        $es_final = es_fase_final($partido['ronda']);
+        $ocultar = ($partido['etapa'] === 'eliminatorias' && !$es_final && !$ya_empezo && empty($u['is_admin']));
 
         $stmt = $pdo->prepare("
             SELECT us.usuario, pr.goles_local, pr.goles_visita, pr.desenlace, pr.clasifica, pr.puntos

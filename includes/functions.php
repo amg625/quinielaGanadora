@@ -78,12 +78,23 @@ function calcular_puntos($etapa, $pred_l, $pred_v, $real_l, $real_v,
 const PTS_CAMPEON_OPC1 = 15;
 const PTS_CAMPEON_OPC2 = 8;
 
-/* ---------- Bloqueo de partidos ---------- */
-// Un partido se bloquea 1 hora antes de iniciar.
-function partido_bloqueado($fecha_cdmx, $estado) {
+/* ---------- Fases finales ----------
+   "Cuartos en adelante" = cuartos, semifinal, tercer lugar y final.
+   En estas fases: el pronóstico es DEFINITIVO al guardar y el cierre es 2h antes. */
+function es_fase_final($ronda) {
+    return in_array($ronda, [
+        'Cuartos de final', 'Semifinal', 'Tercer lugar', 'Final'
+    ]);
+}
+
+/* ---------- Bloqueo de partidos ----------
+   - Cuartos en adelante: se bloquea 2 horas antes.
+   - Resto (grupos, 16vos, 8vos): 1 hora antes. */
+function partido_bloqueado($fecha_cdmx, $estado, $ronda = null) {
     if ($estado === 'finalizado' || $estado === 'en_juego') return true;
     $inicio  = strtotime($fecha_cdmx);
-    $limite  = $inicio - 60 * 60; // 1 hora antes
+    $horas   = es_fase_final($ronda) ? 2 : 1;
+    $limite  = $inicio - $horas * 60 * 60;
     return time() >= $limite;
 }
 

@@ -97,10 +97,104 @@ function enterApp() {
       .forEach(el => el.classList.toggle('hidden', noJuega));
     renderReglas();
     switchView(esAdmin ? 'admin' : 'partidos');
+    // Al entrar, si el torneo ya terminó, mostrar la animación de ganador
+    if (juega === 1) checkFinTorneo();
   } catch (err) {
     UI.toast('Error al cargar la app: ' + err.message, 'err');
     console.error('enterApp error:', err);
   }
+}
+
+/* Verifica si el torneo terminó y muestra la animación de ganador + posición */
+async function checkFinTorneo() {
+  try {
+    const res = await fetch('api/ranking.php?etapa=fin_torneo', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!data.ok || !data.termino) return;
+    mostrarAnimacionGanador(data);
+  } catch (e) {
+    console.error('fin_torneo error:', e);
+  }
+}
+
+function inyectarEstilosGanador() {
+  if (document.getElementById('winner-styles')) return;
+  const css = `
+    .winner-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;
+      background:radial-gradient(circle at 50% 30%, #1a2540, #0a0e1a 70%);animation:winnerFade .4s ease}
+    @keyframes winnerFade{from{opacity:0}to{opacity:1}}
+    .winner-stage{position:relative;text-align:center;padding:24px;max-width:440px;width:90%}
+    .winner-phase{transition:opacity .5s ease, transform .5s ease}
+    .winner-phase-1{position:relative}
+    .winner-phase-1.out{opacity:0;transform:scale(.9);position:absolute;inset:0;pointer-events:none}
+    .winner-phase-2{opacity:0;transform:translateY(20px);position:absolute;inset:0;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;pointer-events:none}
+    .winner-phase-2.in{opacity:1;transform:none;position:relative;pointer-events:auto}
+    .winner-trophy{font-size:88px;animation:winnerBounce 1s ease infinite alternate}
+    @keyframes winnerBounce{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-14px) rotate(6deg)}}
+    .winner-title{font-family:'Bebas Neue',sans-serif;font-size:52px;color:#f5b53d;letter-spacing:1px;margin-top:8px;
+      text-shadow:0 0 24px rgba(245,181,61,.5);animation:winnerPop .6s cubic-bezier(.18,.89,.32,1.28)}
+    @keyframes winnerPop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+    .winner-sub{color:#9aa7c4;font-size:14px;font-weight:600;margin-top:6px}
+    .winner-name{font-family:'Bebas Neue',sans-serif;font-size:44px;color:#eaf0fb;margin-top:14px;
+      padding:8px 24px;border:2px solid #f5b53d;border-radius:14px;display:inline-block;
+      background:rgba(245,181,61,.1);animation:winnerPop .8s cubic-bezier(.18,.89,.32,1.28)}
+    .winner-hi{font-family:'Bebas Neue',sans-serif;font-size:34px;color:#eaf0fb;margin-bottom:10px}
+    .winner-pos{color:#eaf0fb;font-size:17px;line-height:1.5}
+    .winner-pos b{color:#f5b53d}
+    .winner-pts{font-family:'Bebas Neue',sans-serif;font-size:38px;color:#16c060;margin:10px 0 20px}
+    .winner-close{margin-top:8px}
+    .winner-confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+    .winner-confetti::before,.winner-confetti::after{content:'🎉🎊✨🏆⚽';position:absolute;top:-10%;font-size:26px;
+      letter-spacing:40px;white-space:nowrap;animation:winnerConfetti 3s linear infinite;opacity:.8}
+    .winner-confetti::after{top:-20%;left:20%;animation-delay:1.2s;animation-duration:3.6s}
+    @keyframes winnerConfetti{to{transform:translateY(120vh) rotate(220deg)}}
+  `;
+  const style = document.createElement('style');
+  style.id = 'winner-styles';
+  style.textContent = css;
+  document.head.appendChild(style);
+}
+
+function mostrarAnimacionGanador(data) {
+  inyectarEstilosGanador();
+  const soyGanador = data.mi_pos === 1;
+  const ordinal = (n) => {
+    const o = { 1: '1er', 2: '2do', 3: '3er' };
+    return o[n] || `${n}º`;
+  };
+  const overlay = document.createElement('div');
+  overlay.className = 'winner-overlay';
+  overlay.innerHTML = `
+    <div class="winner-stage">
+      <div class="winner-confetti"></div>
+      <div class="winner-phase winner-phase-1">
+        <div class="winner-trophy">🏆</div>
+        <div class="winner-title">¡Felicidades!</div>
+        <div class="winner-sub">Ganador de la Quiniela Mundial 2026</div>
+        <div class="winner-name">${UI.escape(data.ganador || '—')}</div>
+      </div>
+      <div class="winner-phase winner-phase-2">
+        <div class="winner-hi">Hola, ${UI.escape(State.user.usuario)} 👋</div>
+        ${data.mi_pos
+          ? `<div class="winner-pos">${soyGanador
+              ? '🥇 ¡Quedaste en <b>1er lugar</b>! Eres el campeón 🎉'
+              : `Quedaste en <b>${ordinal(data.mi_pos)} lugar</b> de ${data.total_jugadores}`}</div>
+             <div class="winner-pts">${data.mis_pts} puntos</div>`
+          : `<div class="winner-pos">Gracias por participar 🙌</div>`}
+        <button class="btn-primary winner-close">Ver la quiniela</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+
+  // Fase 1 (3s) → Fase 2
+  setTimeout(() => {
+    overlay.querySelector('.winner-phase-1').classList.add('out');
+    overlay.querySelector('.winner-phase-2').classList.add('in');
+  }, 3000);
+
+  const cerrar = () => overlay.remove();
+  overlay.querySelector('.winner-close').addEventListener('click', cerrar);
 }
 
 document.getElementById('btn-logout').addEventListener('click', async () => {
@@ -258,6 +352,16 @@ function matchCard(m, idx, esAncla = false) {
       <div class="locked-note">🔒 Partido por iniciar — apuestas cerradas.</div>
       ${pred ? `<div class="match-actions"><button class="btn-see" data-others="${m.id}">👁 Ver pronósticos de todos</button></div>` : ''}
     </div>`;
+  } else if (m.fase_final && pred) {
+    // FASE FINAL (cuartos+) con pronóstico YA guardado: es definitivo, no editable.
+    const desTxt = pred.desenlace && pred.desenlace !== 'regular'
+      ? ` · ${UI.desenlaceLabel(pred.desenlace)}` : '';
+    const clasTxt = pred.clasifica ? `<br><small style="color:var(--grass)">✅ Clasifica: ${UI.escape(pred.clasifica)}</small>` : '';
+    foot = `<div class="match-foot">
+      <div class="my-pred">Tu pronóstico: <b>${pred.goles_local}–${pred.goles_visita}</b>${desTxt}${clasTxt}</div>
+      <div class="locked-note">🔒 Pronóstico definitivo — en esta fase no se puede modificar.</div>
+      <div class="match-actions"><button class="btn-see" data-others="${m.id}">👁 Ver pronósticos de todos</button></div>
+    </div>`;
   } else {
     // Abierto: inputs de marcador (+ quién clasifica y cómo termina si es eliminatoria)
     const lv = pred ? pred.goles_local : '';
@@ -290,9 +394,10 @@ function matchCard(m, idx, esAncla = false) {
         <input type="number" min="0" max="99" class="score-in" data-side="v" data-mid="${m.id}" value="${vv}" placeholder="-">
       </div>
       ${elimUI}
+      ${m.fase_final ? `<div class="my-pred" style="color:var(--gold);font-weight:600">⚠ En esta fase tu pronóstico será definitivo (no podrás cambiarlo)</div>` : ''}
       ${restante ? `<div class="my-pred" style="color:var(--text-dim);font-weight:500">${restante}</div>` : ''}
       <div class="match-actions">
-        <button class="btn-primary" data-save="${m.id}">${pred ? 'Actualizar' : 'Guardar'} marcador</button>
+        <button class="btn-primary" data-save="${m.id}">${pred ? 'Actualizar' : 'Guardar'} ${m.fase_final ? '(definitivo)' : 'marcador'}</button>
         <button class="btn-see" data-others="${m.id}">👁 Ver</button>
       </div>
     </div>`;
