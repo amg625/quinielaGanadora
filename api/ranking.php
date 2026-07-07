@@ -64,6 +64,83 @@ if ($etapa === 'fin_torneo') {
     ]);
 }
 
+/* Menciones honoríficas (se muestran al terminar el torneo).
+   Todo se calcula con datos ya existentes: pronósticos, resultados y puntos. */
+if ($etapa === 'menciones') {
+    $sql = "SELECT us.usuario, pr.puntos, pr.goles_local AS pl, pr.goles_visita AS pv,
+                   pa.goles_local AS rl, pa.goles_visita AS rv, pa.fecha_cdmx, pa.estado
+            FROM pronosticos pr
+            JOIN usuarios us ON us.id = pr.usuario_id
+            JOIN partidos pa ON pa.id = pr.partido_id
+            WHERE us.juega = 1
+            ORDER BY us.usuario, pa.fecha_cdmx, pa.id";
+    $rows = $pdo->query($sql)->fetchAll();
+
+    $j = [];
+    foreach ($rows as $r) {
+        $u = $r['usuario'];
+        if (!isset($j[$u])) $j[$u] = ['exactos'=>0,'aciertos'=>0,'mejor'=>0,'racha'=>0,'racha_max'=>0,'jugados'=>0];
+        if ($r['estado'] !== 'finalizado' || $r['rl'] === null) continue;
+
+        $j[$u]['jugados']++;
+        $exacto = ((int)$r['pl'] === (int)$r['rl'] && (int)$r['pv'] === (int)$r['rv']);
+        $signo = fn($a,$b) => $a > $b ? 1 : ($a < $b ? -1 : 0);
+        $acierto_res = $signo($r['pl'],$r['pv']) === $signo($r['rl'],$r['rv']);
+
+        if ($exacto) $j[$u]['exactos']++;
+        if ($acierto_res) $j[$u]['aciertos']++;
+        if ((int)$r['puntos'] > $j[$u]['mejor']) $j[$u]['mejor'] = (int)$r['puntos'];
+
+        if ($exacto) {
+            $j[$u]['racha']++;
+            if ($j[$u]['racha'] > $j[$u]['racha_max']) $j[$u]['racha_max'] = $j[$u]['racha'];
+        } else {
+            $j[$u]['racha'] = 0;
+        }
+    }
+
+    $lideres = function($campo, $min = 1) use ($j) {
+        $best = null; $ganadores = [];
+        foreach ($j as $u => $d) {
+            $v = $d[$campo];
+            if ($v < $min) continue;
+            if ($best === null || $v > $best) { $best = $v; $ganadores = [$u]; }
+            elseif ($v === $best) { $ganadores[] = $u; }
+        }
+        return ['valor' => $best, 'jugadores' => $ganadores];
+    };
+
+    $campeon = $pdo->query("SELECT valor FROM config WHERE clave='campeon_real'")->fetch();
+    $campeon = $campeon ? $campeon['valor'] : '';
+    $videntes = [];
+    if ($campeon) {
+        $stmt = $pdo->prepare("SELECT us.usuario FROM quiniela_general qg
+                               JOIN usuarios us ON us.id = qg.usuario_id
+                               WHERE us.juega = 1 AND qg.pais_opcion1 = ?");
+        $stmt->execute([$campeon]);
+        $videntes = array_column($stmt->fetchAll(), 'usuario');
+    }
+
+    $peor = null; $peores = [];
+    foreach ($j as $u => $d) {
+        if ($d['jugados'] < 1) continue;
+        if ($peor === null || $d['aciertos'] < $peor) { $peor = $d['aciertos']; $peores = [$u]; }
+        elseif ($d['aciertos'] === $peor) { $peores[] = $u; }
+    }
+
+    json_out([
+        'ok' => true,
+        'menciones' => [
+            'nostradamus' => $lideres('exactos'),
+            'certero'     => $lideres('aciertos'),
+            'palo'        => $lideres('mejor'),
+            'racha'       => $lideres('racha_max', 2),
+            'optimista'   => ['valor' => $peor, 'jugadores' => $peores],
+            'vidente'     => ['valor' => $campeon, 'jugadores' => $videntes],
+        ],
+    ]);
+}
+
 switch ($etapa) {
 
     case 'grupos':

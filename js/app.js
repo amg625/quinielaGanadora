@@ -627,9 +627,94 @@ async function loadRanking(etapa) {
     // Clic en jugador → abrir resumen
     list.querySelectorAll('[data-jugador]').forEach(row =>
       row.addEventListener('click', () => verResumenJugador(row.dataset.jugador)));
+
+    // Menciones honoríficas (solo pestaña general y si el torneo terminó)
+    if (etapa === 'todos') cargarMenciones(list);
   } catch (err) {
     list.innerHTML = `<div class="empty">${UI.escape(err.message)}</div>`;
   }
+}
+
+/* Carga y muestra las menciones honoríficas al final del ranking (si el torneo terminó) */
+async function cargarMenciones(list) {
+  try {
+    const finRes = await fetch('api/ranking.php?etapa=fin_torneo', { credentials: 'same-origin' });
+    const fin = await finRes.json();
+    if (!fin.ok || !fin.termino) return;
+
+    const res = await fetch('api/ranking.php?etapa=menciones', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!data.ok) return;
+    const m = data.menciones;
+
+    inyectarEstilosMenciones();
+
+    const defs = [
+      ['nostradamus', '🎯', 'El Nostradamus', 'Más marcadores exactos', v => `${v} exactos`],
+      ['certero', '✅', 'El Certero', 'Más resultados acertados', v => `${v} aciertos`],
+      ['palo', '💎', 'El Palo de Suerte', 'Más puntos en un partido', v => `${v} pts en un juego`],
+      ['racha', '🔥', 'La Racha', 'Más exactos seguidos', v => `${v} seguidos`],
+      ['optimista', '📉', 'El Optimista', 'El que menos acertó (¡con cariño!)', v => `${v} aciertos`],
+      ['vidente', '🌎', 'El Vidente', 'Acertó al campeón en su opción 1', v => `campeón: ${v}`],
+    ];
+
+    const cards = defs.map(([key, emoji, titulo, desc, fmt]) => {
+      const item = m[key];
+      const jugadores = item && item.jugadores && item.jugadores.length ? item.jugadores : null;
+      const valorTxt = jugadores && item.valor !== null && item.valor !== undefined ? fmt(item.valor) : '';
+      const nombres = jugadores
+        ? jugadores.map(n => `<span class="mh-name${n === State.user.usuario ? ' me' : ''}">${UI.escape(n)}${n === State.user.usuario ? ' (tú)' : ''}</span>`).join(' ')
+        : '<span class="mh-empty">Sin datos</span>';
+      return `
+        <div class="mh-card">
+          <div class="mh-emoji">${emoji}</div>
+          <div class="mh-body">
+            <div class="mh-title">${titulo}</div>
+            <div class="mh-desc">${desc}</div>
+            <div class="mh-winners">${nombres}</div>
+            ${valorTxt ? `<div class="mh-val">${valorTxt}</div>` : ''}
+          </div>
+        </div>`;
+    }).join('');
+
+    const bloque = document.createElement('div');
+    bloque.innerHTML = `
+      <div class="mh-section">
+        <div class="mh-header">🏅 Menciones Honoríficas</div>
+        <div class="mh-grid">${cards}</div>
+      </div>`;
+    list.appendChild(bloque);
+  } catch (e) {
+    console.error('menciones error:', e);
+  }
+}
+
+function inyectarEstilosMenciones() {
+  if (document.getElementById('mh-styles')) return;
+  const css = `
+    .mh-section{margin-top:26px;padding-top:20px;border-top:1px solid var(--line,#25304d)}
+    .mh-header{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:.5px;text-align:center;
+      color:#f5b53d;margin-bottom:16px}
+    .mh-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mh-card{display:flex;gap:12px;align-items:flex-start;background:var(--panel,#141d31);
+      border:1px solid var(--line,#25304d);border-radius:12px;padding:14px;animation:mhIn .4s ease backwards}
+    @keyframes mhIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+    .mh-emoji{font-size:30px;line-height:1}
+    .mh-body{min-width:0;flex:1}
+    .mh-title{font-weight:800;font-size:14px;color:#eaf0fb}
+    .mh-desc{font-size:11px;color:#9aa7c4;margin:2px 0 7px}
+    .mh-winners{display:flex;flex-wrap:wrap;gap:5px}
+    .mh-name{background:rgba(22,192,96,.14);color:#16c060;font-weight:700;font-size:12px;
+      padding:3px 9px;border-radius:20px}
+    .mh-name.me{background:rgba(245,181,61,.18);color:#f5b53d}
+    .mh-empty{font-size:12px;color:#9aa7c4;font-style:italic}
+    .mh-val{font-size:11px;color:#9aa7c4;margin-top:6px;font-weight:600}
+    @media (max-width:640px){.mh-grid{grid-template-columns:1fr}}
+  `;
+  const s = document.createElement('style');
+  s.id = 'mh-styles';
+  s.textContent = css;
+  document.head.appendChild(s);
 }
 
 /* Modal con el resumen de puntos de un jugador */
